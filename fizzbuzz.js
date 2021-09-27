@@ -1,45 +1,68 @@
-// Here, we create our main function.
 function fizzbuzz() {
-    const readline = require('readline').createInterface(
+    //Get the readline class
+    const readline = require("readline").createInterface(
         {
             input: process.stdin,
             output: process.stdout
         }
     );
-    
-    console.clear()
-    console.log('Welcome to FizzBuzz!\n');
 
-    readline.question('Enter the upper bound to Fizz: ', bound =>
+    console.clear()
+
+    var excludes = []; //Get any excluded rules
+    for (var key in process.argv) {
+        var arg = process.argv[key];
+        if (arg.indexOf("--") != -1) {
+            if ( arg.indexOf("!") )
+                excludes.push(parseInt(arg.slice(3)))
+        }
+    }
+
+    console.log("Welcome to FizzBuzz!\n");
+    if (excludes.length > 0)
+        console.log("Excluding: " + excludes.join(", ") + "\n\n");
+
+    readline.question("Enter the upper bound to Fizz: ", bound =>
     {
         var upper = parseInt(bound);
 
+        if ( upper < 1 ) {
+            console.log("Please enter a value of 1 or greater")
+            readline.close()
+        }
         console.log("\n\n");
-        // Put your code here...
 
         let simpleWords = {
-            3: 'Fizz', 
-            5: 'Buzz', 
-            7: 'Bang', 
-            11: 'Bong'
+            3: "Fizz", 
+            5: "Buzz",
+            7: "Bang", 
+            11: "Bong"
+        }
+        let flags = {
+            3: excludes.indexOf(3) == -1,
+            5: excludes.indexOf(5) == -1,
+            7: excludes.indexOf(7) == -1,
+            11: excludes.indexOf(11) == -1,
+            13: excludes.indexOf(13) == -1,
+            17: excludes.indexOf(17) == -1
         }
 
         for (let i = 1; i <= upper; i++) {
             var output = ""; //Create build string
 
             for (var key in simpleWords) { //Do the simple append words
-                if (i % key == 0)
+                if ( flags[key] && i % key == 0 )
                     output += simpleWords[key];
             }
 
-            if (i % 13 == 0) { //13 puts Fezz in front of any B 
-                var BIdx = output.indexOf('B');
+            if ( flags[13] && i % 13 == 0) { //13 puts Fezz in front of any B 
+                var BIdx = output.indexOf("B");
                 if (BIdx == -1)
                     output += "Fezz";
                 else
                     output = output.slice(0,BIdx) + "Fezz" + output.slice(BIdx);
             }
-            if (i % 17 == 0) { //17 reverses the order of 4 letter words
+            if ( excludes.indexOf(17) && i % 17 == 0) { //17 reverses the order of 4 letter words
                 var parts = getChunks(output, 4);
                 output = "";
                 for (var o = parts.length - 1; o >= 0; o--)
