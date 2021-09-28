@@ -1,73 +1,51 @@
-function fizzbuzz() {
-    //Get the readline class
-    const readline = require("readline").createInterface(
-        {
-            input: process.stdin,
-            output: process.stdout
-        }
-    );
+let values = [
+    [3, "Fizz"],
+    [13, "Fezz"],
+    [5, "Buzz"],
+    [7, "Bang"], 
+    [11, Bong],
+    [17, Reverse]
+]
 
-    console.clear()
+function Bong() {
+    return ["Bong", true];
+}
+function Reverse(input) {
+    let parts = getChunks(input, 4).reverse();
+    return [parts.join(""), true];
+}
 
-    var excludes = []; //Get any excluded rules
-    for (var key in process.argv) {
-        var arg = process.argv[key];
-        if (arg.indexOf("--") != -1) {
-            if ( arg.indexOf("!") )
-                excludes.push(parseInt(arg.slice(3)))
-        }
+
+
+
+const readline = require("readline").createInterface(
+    {
+        input: process.stdin,
+        output: process.stdout
     }
+);
+let flags = {};
 
+function fizzbuzz() {
+    console.clear();
     console.log("Welcome to FizzBuzz!\n");
-    if (excludes.length > 0)
-        console.log("Excluding: " + excludes.join(", ") + "\n\n");
+
+    getExcludes();
 
     readline.question("Enter the upper bound to Fizz: ", bound =>
     {
         var upper = parseInt(bound);
 
-        if ( upper < 1 ) {
-            console.log("Please enter a value of 1 or greater")
-            readline.close()
+        if (checkErrors(upper)) {
+            readline.close();
+            return;
         }
+
         console.log("\n\n");
 
-        let simpleWords = {
-            3: "Fizz", 
-            5: "Buzz",
-            7: "Bang", 
-            11: "Bong"
-        }
-        let flags = {
-            3: excludes.indexOf(3) == -1,
-            5: excludes.indexOf(5) == -1,
-            7: excludes.indexOf(7) == -1,
-            11: excludes.indexOf(11) == -1,
-            13: excludes.indexOf(13) == -1,
-            17: excludes.indexOf(17) == -1
-        }
-
         for (let i = 1; i <= upper; i++) {
-            var output = ""; //Create build string
-
-            for (var key in simpleWords) { //Do the simple append words
-                if ( flags[key] && i % key == 0 )
-                    output += simpleWords[key];
-            }
-
-            if ( flags[13] && i % 13 == 0) { //13 puts Fezz in front of any B 
-                var BIdx = output.indexOf("B");
-                if (BIdx == -1)
-                    output += "Fezz";
-                else
-                    output = output.slice(0,BIdx) + "Fezz" + output.slice(BIdx);
-            }
-            if ( excludes.indexOf(17) && i % 17 == 0) { //17 reverses the order of 4 letter words
-                var parts = getChunks(output, 4);
-                output = "";
-                for (var o = parts.length - 1; o >= 0; o--)
-                    output += parts[o];
-            }
+            let output = "";
+            output = iterateWords(output, i);
 
             if (output == "")
                 output = i.toString();
@@ -80,13 +58,62 @@ function fizzbuzz() {
     });
 }
 
+function checkErrors(number) {
+    let erred = false;
+    if ( number < 1 ) {
+        console.log("\nPlease enter a value of 1 or greater\n");
+        erred = true;
+    }
+    if ( number != numbers ) {
+        console.log("\nPlease enter a valid number\n");
+        erred = true;
+    }
+
+    return erred;
+}
+
+function getExcludes() {
+    let excludes = [];
+    for (let key in process.argv) {
+        let arg = process.argv[key];
+        if (arg.indexOf("--") != -1) {
+            if ( arg.indexOf("!") )
+                excludes.push(parseInt(arg.slice(3)));
+        }
+    }
+
+    if (excludes.length > 0)
+        console.log("Excluding: " + excludes.join(", ") + "\n\n");
+
+    for (let idx = 0; idx < values.length; idx++)
+        flags[values[idx][0]] = excludes.indexOf(values[idx][0]) == -1;
+}
+
+function iterateWords(input, number) {
+    for (let idx = 0; idx < values.length; idx++) {
+
+        let comparator = values[idx][0];
+        let func = values[idx][1];
+
+        if ( flags[comparator] && number % comparator == 0 ) {
+            if (typeof func === "string" || func instanceof String)
+                input += func;
+            else if ( typeof func === "function" ) {
+                let result = func(input, number);
+                input = result[0];
+                if (result[1])
+                    break;
+            }
+        }
+    }
+    return input;
+}
+
 function getChunks(str, size) {
-    var chunks = []
-    for (var i = 0; i < Math.ceil(str.length / size); i++)
-        chunks.push("");
-    for (var i = 0; i < str.length; i++)
-        chunks[Math.floor(i / 4)] += str[i];
-    return chunks
+    let chunks = [];
+    for (let i = 0; i < str.length; i += size)
+        chunks[Math.floor(i / size)] = str.substring(i, i + size);
+    return chunks;
 }
 
 // Now we run the main function...
